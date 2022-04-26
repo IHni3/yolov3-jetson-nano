@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
-
-exec python3 yolo_od.py $1
+export OPENCV_LOG_LEVEL=OFF
+exec python3 src/main.py $1

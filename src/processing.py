@@ -3,13 +3,13 @@ import cv2
 import logging_utils as logging
 import stopwatch
 import numpy as np
-from yolo_od_utils import *
+from yolo_utils import *
 import os
 from PIL import Image
 
 # constants
-OUTPUT_VIDEO_FILENAME = "output_video.avi"
-OUTPUT_IMAGE_FILENAME = "output_image.jpg"
+OUTPUT_VIDEO_EXTENSION = ".avi"
+OUTPUT_IMAGE_EXTENSION = ".jpg"
 
 # variables
 enable_detection_recording = False
@@ -44,14 +44,19 @@ def process_images(file, output_dir, net, confidence, threshold, labels, colors)
         logging.error("Image not found: " + file)
         return
 
+
     # inference
     logging.verbose("Running inference")
-    sw.start()
     (result_image, datas) = yolo_object_detection(image, net, confidence, threshold, labels, colors)
-    logging.verbose(sw.message(message="Inference time"))
+
+    # get input filename without extension
+    filename_no_ext = file.split("." , 1)[0]
+
+    # generate output filename
+    output_file = filename_no_ext + "_processed" + OUTPUT_IMAGE_EXTENSION
 
     # save the image
-    output_file = os.path.join(output_dir, OUTPUT_IMAGE_FILENAME)
+    output_file = os.path.join(output_dir, output_file)
 
     # save the image
     logging.verbose("Saving image: " + output_file)
@@ -82,8 +87,18 @@ def process_video(file, output_dir, batch_size, net, confidence, threshold, labe
         # create csv file for object logging
         csv_file = create_csv(output_dir)
 
+    #check file exists
+    if not os.path.exists(file):
+        logging.error("file not found: " + file)
+        return
+
     # load the video
     vidcap = cv2.VideoCapture(file)
+
+    # check if open
+    if not vidcap.isOpened():
+        logging.error("could not open video: " + file)
+        return
 
     # get the video framerate
     given_framerate = int(vidcap.get(cv2.CAP_PROP_FPS))
@@ -107,19 +122,28 @@ def process_video(file, output_dir, batch_size, net, confidence, threshold, labe
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    # get input filename without extension
+    filename_no_ext = file.split("." , 1)[0]
+
+    # generate output filename
+    output_file = filename_no_ext + "_processed" + OUTPUT_VIDEO_EXTENSION
+
     # create the video writer
-    output_file = os.path.join(output_dir, OUTPUT_VIDEO_FILENAME)
+    output_file = os.path.join(output_dir, output_file)
     out = cv2.VideoWriter(output_file,cv2.VideoWriter_fourcc(*'DIVX'), framerate, frameSize)
     logging.verbose("Output video: " + output_file)
 
+    # get number of images from video
+    number_of_images = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+
     # counts the number of frames in the video
-    count = 0
+    image_count = 0
 
     #init stopwatch for time measurement
     sw = stopwatch.Stopwatch()
 
     # loop over the frames of the video
-    while vidcap.isOpened():
+    while image_count < number_of_images:
 
         # allocate memory for images (len = batch_size)
         sw.start()
@@ -130,29 +154,31 @@ def process_video(file, output_dir, batch_size, net, confidence, threshold, labe
         sw.start()
 
         process_n_image = round(given_framerate / framerate)
-        logging.verbose("Processing " + str(process_n_image) + " images")
+        logging.verbose("Processing every " + str(process_n_image) + " image")
         
         image_added_count = 0
-        total_count = 0
-        while image_added_count < batch_size:
+        while image_added_count < batch_size and image_count < number_of_images:
             success, image = vidcap.read()
             if success:
-                if total_count % process_n_image == 0:
+                if image_count % process_n_image == 0:
                     images[image_added_count] = image
                     image_added_count += 1
                     logging.verbose("Added image " + str(image_added_count) + " of " + str(batch_size))
                 else:
                     logging.verbose("Skipping image")
             else:
+		
                 break
-            total_count += 1
+            image_count += 1
 
         logging.verbose(sw.message(message="Collecting time"))
 
-        # run inference on the batch
-        sw.start()
-        processed = yolo_object_detection_blob(images, net, confidence, threshold, labels, colors)
-        logging.verbose(sw.message(message="Inference time"))        
+        # run inference
+        if batch_size > 1:
+            processed = yolo_object_detection_blob(images, net, confidence, threshold, labels, colors)
+        else:
+            processed = yolo_object_detection(images[0], net, confidence, threshold, labels, colors)
+            processed = [processed]
         
         # write the processed images to the output video
         logging.verbose("Writing to video")
@@ -175,9 +201,12 @@ def process_video(file, output_dir, batch_size, net, confidence, threshold, labe
 
         logging.verbose(sw.message(message="Write time"))
 
+        # print progress
+        progress = round(image_count / number_of_images * 100, 2)
+        logging.info("Progress: " + str(progress) + "%")
+
     # cleanup
     sw.start()
-    cv2.destroyAllWindows()
     vidcap.release()
     out.release()
     logging.verbose(sw.message(message="Cleanup time"))
