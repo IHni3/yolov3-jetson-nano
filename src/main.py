@@ -2,6 +2,8 @@
 import numpy as np
 import argparse
 import cv2
+import os.path
+import mimetypes
 
 import logging_utils as logging
 import processing
@@ -35,9 +37,9 @@ parser.add_argument('-o', '--output',
 
 parser.add_argument('-b', '--batch-size',
     type=int,
-    default=64,
+    default=4,
     help='Batch size for inference. Only possible for video mode')
-parser.add_argument('--video-framerate', type=int, default=20, help='Video framerate')
+parser.add_argument('--video-framerate', type=int, default=0, help='Video framerate')
 
 parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output')
 
@@ -52,6 +54,17 @@ args = parser.parse_args()
 coco_names_file = "../yolo/coco.names"
 yolov3_weight_file = "../yolo/yolov3.weights"
 yolov3_config_file = "../yolo/yolov3.cfg"
+
+# check yolo files existing
+if not os.path.isfile(coco_names_file):
+    logging.error("File coco.names not found!")
+    exit()
+if not os.path.isfile(yolov3_weight_file):
+    logging.error("File yolov3.weights not found!")
+    exit()
+if not os.path.isfile(yolov3_config_file):
+    logging.error("File yolov3.cfg not found!")
+    exit()
 
 # read coco object names
 labels = open(coco_names_file).read().strip().split("\n")
@@ -72,6 +85,51 @@ logging.enable_verbose_output = args.verbose
 
 # enable or disable detection recording
 processing.enable_detection_recording = args.record_detections
+
+# check input file matches given mode (image/video)
+mimetypes.init()
+mimestart = mimetypes.guess_type(args.file)[0]
+
+if mimestart != None:
+    mimestart = mimestart.split('/')[0]
+else:
+    mimestart = ""
+
+if mimestart == "video":
+    # check missmatch of file and given mode
+    if args.mode != 'video':
+        logging.error("Given file has type video but given mode is image!")
+        exit()
+
+elif mimestart == "image":
+    # check missmatch of file and given mode
+    if args.mode != "image":
+        logging.error("Given file has type image but given mode is video!")
+        exit()
+else:
+    logging.error("Given file is not of type video or image!")
+    exit() 
+
+# check range of batch-size
+if args.batch_size <= 0:
+    logging.error("Given batch size is invalid!")
+    exit() 
+
+# check range of confidence
+if args.confidence > 1.0:
+    logging.error("Given confidence value is invalid!")
+    exit()
+elif args.confidence <= 0:
+    logging.error("Given confidence value is invalid!")
+    exit()
+
+# check range of threshold
+if args.threshold > 1.0:
+    logging.error("Given confidence value is invalid!")
+    exit()
+elif args.threshold <= 0:
+    logging.error("Given confidence value is invalid!")
+    exit()
 
 ### mode is images  
 if args.mode == 'image':
@@ -94,4 +152,4 @@ elif args.mode == 'video':
         colors=colors,
         framerate=args.video_framerate)
 else:
-    printError("Invalid mode")
+    logging.error("Invalid mode")

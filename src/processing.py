@@ -50,7 +50,9 @@ def process_images(file, output_dir, net, confidence, threshold, labels, colors)
     (result_image, datas) = yolo_object_detection(image, net, confidence, threshold, labels, colors)
 
     # get input filename without extension
-    filename_no_ext = file.split("." , 1)[0]
+    filename_no_ext = file.rsplit("." , 1)[0]
+
+    print(filename_no_ext)
 
     # generate output filename
     output_file = filename_no_ext + "_processed" + OUTPUT_IMAGE_EXTENSION
@@ -102,6 +104,10 @@ def process_video(file, output_dir, batch_size, net, confidence, threshold, labe
 
     # get the video framerate
     given_framerate = int(vidcap.get(cv2.CAP_PROP_FPS))
+
+    #if param framerate 0 use given framerate
+    if(framerate <= 0):
+        framerate = given_framerate
 
     # given framerate is smaller then output framerate
     if(given_framerate < framerate):
@@ -190,7 +196,7 @@ def process_video(file, output_dir, batch_size, net, confidence, threshold, labe
             
             if enable_detection_recording:
                 # calculate time of image in video
-                time = round((count + processed_count) / framerate, 2)
+                time = round((image_count + processed_count) / framerate, 2)
 
                 # log to csv file
                 for data in datas:
