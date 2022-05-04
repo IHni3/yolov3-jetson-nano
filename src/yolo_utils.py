@@ -196,7 +196,7 @@ def yolo_object_detection(image, net, confidence, threshold, labels, colors):
 
     # preprocess image data with rescaling and resizing to fit YOLO input shape
     # OpenCV assumes BGR images: we have to convert to RGB, with swapRB=True
-    logging.info("Preprocessing image...")
+    logging.verbose("Preprocessing image...")
     sw.start()
     blob = cv2.dnn.blobFromImage(image, 1 / 255.0, (416, 416), swapRB=True, crop=False)
     logging.verbose(sw.message("Preprocessing image"))
