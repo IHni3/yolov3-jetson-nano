@@ -1,4 +1,4 @@
-# Zusammenfassung {#zusammenfassung .unnumbered}
+# Zusammenfassung
 
 Diese Studienarbeit befasst sich mit der Entwicklung einer Trainingsumgebung für autonomes Fahren mit OpenCV. Dazu wurde das Jetson Nano von Nvidia verwendet, ein Entwicklungskit für KI und Robotik.
 
@@ -8,7 +8,7 @@ Um die implementierte Lösung auch in der Robotik optimal einsetzen zu können, 
 
 Performance und Genauigkeit sind wichtige Kennzahlen bei der Nutzung von Künstlichen neuronalen Netzen (KNN). Aus diesem Grund wurden diese Punkte genau untersucht und mögliche Verbesserungen aufgezeigt und teilweise auch implementiert.
 
-# Abstract {#abstract .unnumbered}
+# Abstract
 
 This student research project deals with the development of a training environment for autonomous driving with OpenCV. For this purpose, the Jetson Nano from Nvidia was used, a development kit for AI and robotics.
 
@@ -196,7 +196,7 @@ Verarbeitung des Bildes street.jpg.
 
 Verarbeitung des Bildes street2.jpg mit geändertem Threshold und Confidence.
 
-# Parameterabhängigkeiten {#parameterabhuxe4ngigkeiten}
+# Parameterabhängigkeiten
 
 Mit den Schaltern `-c` bzw. `--confidence` und `-t` bzw. `--threshold` lassen sich die ergebnisse des neuronalen Netzes YOLOv3 manipulieren. Mit der Confidence lässt sich der Wert für die Genauigkeit festlegen, der minimal erreicht werden muss, um als erfolgreiche Detektion angesehen zu werden. Wird dieser zu niedrig gesetzt, werden Objekte erkannt, die es nicht gibt. Bei einem zu hohen Genauigkeitswert kann es sein, dass nichts erkannt wird. Der voreingestellte Wert $0.5$ hat sich als guter Standard herauskristallisiert.
 
@@ -218,7 +218,7 @@ Eine andere Möglichkeit die Performance zu erhöhen ist die Bildgröße des Ein
 
 Die letzte beschriebene Möglichkeit ist die Erhöhung der Batchsize dadurch werden auf der Grafikkarte mehrere Bilder gleichzeitig verarbeitet, dazu kann die Option `--batch-size` verwendet werden. Bei einer zu hohen Batchsize kann es zu Problemen kommen, da RAM und Grafikspeicher beim Jetson Nano eine Einheit sind und gemeinsam verwendet werden, dadurch kann es zu Speicherproblemen führen. Nach ausgiebigen Tests hat sich herauskristallisiert, dass die Batchsize nicht höher als 16 gesetzt werden sollte (https://www.nvidia.com/de-de/autonomous-machines/embedded-systems/jetson-nano/education-projects/).
 
-# Mögliche Fehler {#muxf6gliche-fehler}
+# Mögliche Fehler
 
 **Fehler „system throttled due to over-current"**
 
